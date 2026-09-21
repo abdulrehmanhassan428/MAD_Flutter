@@ -1,0 +1,179 @@
+
+/// Course Roster Console App - Lab 1
+
+/// Print welcome banner
+void printWelcome(String appName) {
+  print('=== $appName ===');
+}
+
+/// Generate enrollment code from course title
+String generateCode(String title) {
+  return '${title.substring(0, 2).toUpperCase()}101';
+}
+
+void main() {
+
+  // Part 1 (Setup and Welcome)
+
+  printWelcome('Course Roster Manager');
+
+
+  // Part 2: Course and Roster Data
+
+  const int maxCapacity = 4;
+  final DateTime createdAt = DateTime.now();
+  String courseTitle = 'CS201: Mobile App Development';
+  int capacity = maxCapacity;
+  double creditHours = 3.0;
+  bool isOpen = true;
+  List<String> enrolledStudents = [
+    'Aiden',
+    'Maria',
+    'Jamal'
+  ];
+  Set<String> waitlist = {
+    'Priya',
+    'Noah'
+  };
+  Map<String, int> attendanceCount = {
+    'Aiden': 3,
+    'Maria': 4,
+    'Jamal': 2
+  };
+  print(
+    '$courseTitle | Capacity: $capacity | Enrolled: ${enrolledStudents.length}'
+  );
+  print('Created: $createdAt | Credit Hours: $creditHours');
+
+
+  // Part 3: Null Safe Instructor Info
+
+  String? instructorEmail;
+  print(instructorEmail ?? 'NULL');
+  late String enrollmentCode;
+  enrollmentCode = generateCode(courseTitle);
+  print('Enrollment code: $enrollmentCode');
+
+
+// Unsafe way you cannot use ! because it does not have null
+// By the use of ?. the length does not print
+
+  // print(instructorEmail!.length);
+  // print(instructorEmail?.length);
+
+
+  // Safe way
+
+  print(
+    'Instructor email length: ${instructorEmail?.length ?? 0}'
+  );
+
+
+  // Part 4: Formatting Strings
+
+  String raw = ' Aiden , maria ,JAMAL , Priya ';
+
+  List<String> cleanNames = [];
+
+  for (var name in raw.split(',')) {
+    cleanNames.add(name.trim());
+  }
+
+  print('Clean names: $cleanNames');
+
+
+  String courseDescription = '''
+  This course is about mobile app development. By the end of this course you will be able to develop a complete mobile app using dart language. In this language you will learn how to develop a code for mobile app and how beginners in 1 month can build a professional mobile app. So stay connected in this course.
+''';
+
+  print(courseDescription);
+
+  print(
+    'Seats left: ${capacity - enrolledStudents.length}'
+  );
+
+
+  // Part 5: Operators
+
+  int fullGroups = enrolledStudents.length ~/ 3;
+  int leftover = enrolledStudents.length % 3;
+
+  print(
+    'Full groups of 3: $fullGroups, leftover: $leftover'
+  );
+
+
+  Object formInput = 'twenty-two';
+
+  if (formInput is String) {
+    print('formInput is a String');
+  }
+  
+  if (formInput is! int) {
+    print('formInput is not an int');
+  }
+  else{
+    print('formInput is int');
+  }
+
+
+
+  // Cascade
+
+  StringBuffer report = StringBuffer()
+    ..write('Report: $courseTitle')
+    ..write(' | Cap: $capacity')
+    ..write(' | Roster: ${enrolledStudents.length}');
+
+  print(report.toString());
+
+
+  // Null safe cascade
+
+  List<String>? extraNotes;
+
+  extraNotes?..add('Room change pending');
+
+  print('Extra notes: $extraNotes');
+
+
+  // ? after string means if value is null then give 0
+
+  int? bonusSeats;
+
+  bonusSeats ??= 0;
+
+  print('Bonus seats: $bonusSeats');
+
+
+// Part 6: Enrollment Logic
+
+  if (isOpen && enrolledStudents.length < capacity) {
+    print("You can enroll");
+  } else {
+    print('Enrollment Clsed');
+  }
+
+
+  int enrollmentStatusCode = 200;
+
+  switch (enrollmentStatusCode) {
+
+    case 200:
+      print('Enrolled');
+      break;
+    case 404:
+      print('Course Not Found');
+      break;
+    default:
+      print('Error');
+      break;
+  }
+
+
+  String statusTag = isOpen ? 'OPEN' : 'FULL';
+
+  print(statusTag);
+
+}
+
