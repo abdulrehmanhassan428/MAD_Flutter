@@ -277,7 +277,7 @@ void step5() {
   // Magazine does not need renewal, so it should not inherit it
   // from LibraryItem, where every library item would get the feature.
 }
-
+// commited in class
 // ===== Remaining steps =====
 
 void step6() {
