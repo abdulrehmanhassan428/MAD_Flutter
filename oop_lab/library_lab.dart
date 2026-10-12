@@ -29,7 +29,7 @@ final int renewLimit = 1 + t % 3;
 final int renewAttempts = 2 + u;
 final int shelfSize = 3 + u % 4;
 
-// ===== Step 1: Inheritance =====
+// ===== Step 1: Abstract Class and Inheritance =====
 abstract class LibraryItem {
   final String title;
   final int year;
@@ -41,6 +41,28 @@ abstract class LibraryItem {
   int lateFee(int days);
 }
 
+// ===== Step 4: Interface =====
+abstract class Borrowable {
+  bool get isAvailable;
+
+  void borrow();
+
+  void giveBack();
+}
+
+// ===== Step 5: Mixin =====
+mixin Renewable {
+  int renewals = 0;
+
+  bool renew(int limit) {
+    if (renewals >= limit) return false;
+
+    renewals++;
+    return true;
+  }
+}
+
+// ===== Step 1: Book =====
 class Book extends LibraryItem with Renewable implements Borrowable {
   final int pages;
   bool _out = false;
@@ -69,7 +91,7 @@ class Book extends LibraryItem with Renewable implements Borrowable {
 
 Book mainBook() => Book(titles[u], yearOf(u), 100 + 3 * seed);
 
-// ===== Step 2: Method Overriding =====
+// ===== Step 2: Magazine =====
 class Magazine extends LibraryItem {
   final int issue;
 
@@ -87,7 +109,7 @@ Magazine mainMagazine() {
   return Magazine(titles[i], yearOf(i), 1 + (t + u) % 12);
 }
 
-// ===== Step 3: Abstract Class =====
+// ===== Step 3: DVD =====
 class Dvd extends LibraryItem with Renewable {
   final int minutes;
 
@@ -103,27 +125,6 @@ class Dvd extends LibraryItem with Renewable {
 Dvd mainDvd() {
   int i = (u + 2) % 10;
   return Dvd(titles[i], yearOf(i), 90 + seed % 40);
-}
-
-// ===== Step 4: Interface =====
-abstract class Borrowable {
-  bool get isAvailable;
-
-  void borrow();
-
-  void giveBack();
-}
-
-// ===== Step 5: Mixin =====
-mixin Renewable {
-  int renewals = 0;
-
-  bool renew(int limit) {
-    if (renewals >= limit) return false;
-
-    renewals++;
-    return true;
-  }
 }
 
 // ===== Step 6: Enum =====
@@ -155,7 +156,22 @@ enum MemberType {
   }
 }
 
-// ===== Step 1 Output =====
+// ===== Step 7: Extension Methods =====
+extension MoneyText on int {
+  String get rs => 'Rs $this';
+}
+
+extension Initials on String {
+  String get initials => split(' ').map((w) => w[0]).join();
+}
+
+extension ShelfMath on List<LibraryItem> {
+  int totalLateFee(int days) {
+    return fold(0, (sum, item) => sum + item.lateFee(days));
+  }
+}
+
+// ===== Step 1 =====
 void step1() {
   print('--- Step 1 ---');
 
@@ -166,10 +182,10 @@ void step1() {
   print('Step 1: stored as LibraryItem: ${item.title}');
   print('Step 1: runtimeType = ${item.runtimeType}');
 
-  // item.pages compile error because LibraryItem has no pages member.
+  // item.pages is unavailable through the LibraryItem reference.
 }
 
-// ===== Step 2 Output =====
+// ===== Step 2 =====
 void step2() {
   print('--- Step 2 ---');
 
@@ -179,7 +195,7 @@ void step2() {
   // @override helps detect misspelled method names.
 }
 
-// ===== Step 3 Output =====
+// ===== Step 3 =====
 void step3() {
   print('--- Step 3 ---');
 
@@ -202,10 +218,10 @@ void step3() {
     '${dvd.lateFee(daysLate)}',
   );
 
-  // LibraryItem cannot be instantiated directly because it is abstract.
+  // LibraryItem cannot be instantiated because it is abstract.
 }
 
-// ===== Step 4 Output =====
+// ===== Step 4 =====
 void step4() {
   print('--- Step 4 ---');
 
@@ -233,7 +249,7 @@ void step4() {
   }
 }
 
-// ===== Step 5 Output =====
+// ===== Step 5 =====
 void step5() {
   print('--- Step 5 ---');
 
@@ -251,9 +267,11 @@ void step5() {
 
   print('Step 5: renew once more? ${book.renew(renewLimit)}');
   print('Step 5: dvd can renew too? ${mainDvd().renew(1)}');
+
+  // Book and Dvd share the Renewable mixin.
 }
 
-// ===== Step 6 Output =====
+// ===== Step 6 =====
 void step6() {
   print('--- Step 6 ---');
 
@@ -270,11 +288,32 @@ void step6() {
   // Enum values are safer than strings because Dart checks valid values.
 }
 
-// ===== Steps 7–10: Awaiting Task Instructions =====
+// ===== Step 7 =====
 void step7() {
   print('--- Step 7 ---');
+
+  MemberType type = MemberType.values[seed % 3];
+  int fee = mainBook().lateFee(daysLate);
+  int discountedFee = type.applyDiscount(fee);
+
+  List<LibraryItem> shelf = [
+    mainBook(),
+    mainMagazine(),
+    mainDvd(),
+  ];
+
+  print('Step 7: ${discountedFee.rs}');
+  print('Step 7: initials of "${titles[u]}" = ${titles[u].initials}');
+  print(
+    'Step 7: shelf fee for $daysLate days = '
+    '${shelf.totalLateFee(daysLate).rs}',
+  );
+
+  // Extensions allow convenient syntax such as 72.rs
+  // instead of calling a separate function like rs(72).
 }
 
+// ===== Steps 8–10: Awaiting Instructions =====
 void step8() {
   print('--- Step 8 ---');
 }
