@@ -29,33 +29,39 @@ final int renewLimit = 1 + t % 3;
 final int renewAttempts = 2 + u;
 final int shelfSize = 3 + u % 4;
 
-// ===== Step 1: Classes and extends =====
+// ===== Step 1 and Step 3: Abstract parent class =====
 
-class LibraryItem {
+abstract class LibraryItem {
   final String title;
   final int year;
 
   LibraryItem(this.title, this.year);
 
-  // Step 2.1: Parent method
   String describe() => '$title ($year)';
+
+  // Abstract method: each concrete subclass must implement it.
+  int lateFee(int days);
 }
+
+// ===== Book =====
 
 class Book extends LibraryItem {
   final int pages;
 
   Book(super.title, super.year, this.pages);
 
-  // Step 2.2: Override parent method
   @override
   String describe() => '${super.describe()}, $pages pages';
+
+  @override
+  int lateFee(int days) => days * feePerDay;
 }
 
 Book mainBook() {
   return Book(titles[u], yearOf(u), 100 + 3 * seed);
 }
 
-// ===== Step 2.3: Magazine class =====
+// ===== Magazine =====
 
 class Magazine extends LibraryItem {
   final int issue;
@@ -64,6 +70,9 @@ class Magazine extends LibraryItem {
 
   @override
   String describe() => '${super.describe()}, issue $issue';
+
+  @override
+  int lateFee(int days) => days * (feePerDay ~/ 2);
 }
 
 Magazine mainMagazine() {
@@ -73,6 +82,30 @@ Magazine mainMagazine() {
     titles[i],
     yearOf(i),
     1 + (t + u) % 12,
+  );
+}
+
+// ===== Step 3: DVD =====
+
+class Dvd extends LibraryItem {
+  final int minutes;
+
+  Dvd(super.title, super.year, this.minutes);
+
+  @override
+  String describe() => '${super.describe()}, $minutes min';
+
+  @override
+  int lateFee(int days) => days * feePerDay * 2;
+}
+
+Dvd mainDvd() {
+  int i = (u + 2) % 10;
+
+  return Dvd(
+    titles[i],
+    yearOf(i),
+    90 + seed % 40,
   );
 }
 
@@ -117,16 +150,40 @@ void step2() {
   print('Step 2: ${mainBook().describe()}');
   print('Step 2: ${mainMagazine().describe()}');
 
-  // If @override is forgotten and describe is misspelled as
-  // descibe(), Dart treats it as a different method. The inherited
-  // describe() remains unchanged, so the custom output is not used.
+  // If describe is misspelled as descibe(), it will not override
+  // the parent method. @override helps the analyzer detect the typo.
 }
 
-// ===== Remaining steps =====
+// ===== Step 3 =====
 
 void step3() {
   print('--- Step 3 ---');
+
+  Book book = mainBook();
+  Magazine magazine = mainMagazine();
+  Dvd dvd = mainDvd();
+
+  print(
+    'Step 3: Book late fee for $daysLate days = '
+    '${book.lateFee(daysLate)}',
+  );
+
+  print(
+    'Step 3: Magazine late fee for $daysLate days = '
+    '${magazine.lateFee(daysLate)}',
+  );
+
+  print(
+    'Step 3: Dvd late fee for $daysLate days = '
+    '${dvd.lateFee(daysLate)}',
+  );
+
+  // LibraryItem('x', 2000) is not allowed because LibraryItem
+  // is abstract. Abstract classes cannot be instantiated directly;
+  // a concrete subclass must implement all abstract methods.
 }
+
+// ===== Remaining steps =====
 
 void step4() {
   print('--- Step 4 ---');
