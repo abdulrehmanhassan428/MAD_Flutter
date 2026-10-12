@@ -29,8 +29,7 @@ final int renewLimit = 1 + t % 3;
 final int renewAttempts = 2 + u;
 final int shelfSize = 3 + u % 4;
 
-// ===== Step 1–3: Abstract parent class =====
-
+// ===== Step 1: Inheritance =====
 abstract class LibraryItem {
   final String title;
   final int year;
@@ -41,31 +40,6 @@ abstract class LibraryItem {
 
   int lateFee(int days);
 }
-
-// ===== Step 4: Borrowable contract =====
-
-abstract class Borrowable {
-  bool get isAvailable;
-  void borrow();
-  void giveBack();
-}
-
-// ===== Step 5.1: Renewable mixin =====
-
-mixin Renewable {
-  int renewals = 0;
-
-  bool renew(int limit) {
-    if (renewals >= limit) {
-      return false;
-    }
-
-    renewals++;
-    return true;
-  }
-}
-
-// ===== Book =====
 
 class Book extends LibraryItem with Renewable implements Borrowable {
   final int pages;
@@ -93,12 +67,9 @@ class Book extends LibraryItem with Renewable implements Borrowable {
   }
 }
 
-Book mainBook() {
-  return Book(titles[u], yearOf(u), 100 + 3 * seed);
-}
+Book mainBook() => Book(titles[u], yearOf(u), 100 + 3 * seed);
 
-// ===== Magazine =====
-
+// ===== Step 2: Method Overriding =====
 class Magazine extends LibraryItem {
   final int issue;
 
@@ -113,16 +84,10 @@ class Magazine extends LibraryItem {
 
 Magazine mainMagazine() {
   int i = (u + 1) % 10;
-
-  return Magazine(
-    titles[i],
-    yearOf(i),
-    1 + (t + u) % 12,
-  );
+  return Magazine(titles[i], yearOf(i), 1 + (t + u) % 12);
 }
 
-// ===== DVD =====
-
+// ===== Step 3: Abstract Class =====
 class Dvd extends LibraryItem with Renewable {
   final int minutes;
 
@@ -137,33 +102,60 @@ class Dvd extends LibraryItem with Renewable {
 
 Dvd mainDvd() {
   int i = (u + 2) % 10;
-
-  return Dvd(
-    titles[i],
-    yearOf(i),
-    90 + seed % 40,
-  );
+  return Dvd(titles[i], yearOf(i), 90 + seed % 40);
 }
 
-// ===== Main =====
+// ===== Step 4: Interface =====
+abstract class Borrowable {
+  bool get isAvailable;
 
-void main() {
-  print('Seed: $seed (t=$t, u=$u)');
+  void borrow();
 
-  step1();
-  step2();
-  step3();
-  step4();
-  step5();
-  step6();
-  step7();
-  step8();
-  step9();
-  step10();
+  void giveBack();
 }
 
-// ===== Step 1 =====
+// ===== Step 5: Mixin =====
+mixin Renewable {
+  int renewals = 0;
 
+  bool renew(int limit) {
+    if (renewals >= limit) return false;
+
+    renewals++;
+    return true;
+  }
+}
+
+// ===== Step 6: Enum =====
+enum MemberType {
+  guest,
+  student,
+  faculty;
+
+  int get maxLoans {
+    switch (this) {
+      case MemberType.guest:
+        return 2;
+      case MemberType.student:
+        return 5;
+      case MemberType.faculty:
+        return 10;
+    }
+  }
+
+  int applyDiscount(int fee) {
+    switch (this) {
+      case MemberType.guest:
+        return fee;
+      case MemberType.student:
+        return fee ~/ 2;
+      case MemberType.faculty:
+        return fee ~/ 4;
+    }
+  }
+}
+
+// ===== Step 1 Output =====
 void step1() {
   print('--- Step 1 ---');
 
@@ -174,24 +166,20 @@ void step1() {
   print('Step 1: stored as LibraryItem: ${item.title}');
   print('Step 1: runtimeType = ${item.runtimeType}');
 
-  // item.pages is a compile error because LibraryItem
-  // does not declare a pages field, even though the object is a Book.
+  // item.pages compile error because LibraryItem has no pages member.
 }
 
-// ===== Step 2 =====
-
+// ===== Step 2 Output =====
 void step2() {
   print('--- Step 2 ---');
 
   print('Step 2: ${mainBook().describe()}');
   print('Step 2: ${mainMagazine().describe()}');
 
-  // A misspelled descibe() does not override describe().
-  // @override helps the analyzer detect the mistake.
+  // @override helps detect misspelled method names.
 }
 
-// ===== Step 3 =====
-
+// ===== Step 3 Output =====
 void step3() {
   print('--- Step 3 ---');
 
@@ -214,12 +202,10 @@ void step3() {
     '${dvd.lateFee(daysLate)}',
   );
 
-  // LibraryItem('x', 2000) cannot be instantiated directly
-  // because LibraryItem is abstract.
+  // LibraryItem cannot be instantiated directly because it is abstract.
 }
 
-// ===== Step 4 =====
-
+// ===== Step 4 Output =====
 void step4() {
   print('--- Step 4 ---');
 
@@ -245,14 +231,9 @@ void step4() {
       '${item is Borrowable}',
     );
   }
-
-  // implements requires Book to implement every contract member.
-  // extends Borrowable would inherit concrete implementations,
-  // but Borrowable declares no method bodies.
 }
 
-// ===== Step 5 =====
-
+// ===== Step 5 Output =====
 void step5() {
   print('--- Step 5 ---');
 
@@ -260,9 +241,7 @@ void step5() {
   int ok = 0;
 
   for (int i = 0; i < renewAttempts; i++) {
-    if (book.renew(renewLimit)) {
-      ok++;
-    }
+    if (book.renew(renewLimit)) ok++;
   }
 
   print(
@@ -272,18 +251,26 @@ void step5() {
 
   print('Step 5: renew once more? ${book.renew(renewLimit)}');
   print('Step 5: dvd can renew too? ${mainDvd().renew(1)}');
-
-  // Book and Dvd share renewal behaviour through a mixin.
-  // Magazine does not need renewal, so it should not inherit it
-  // from LibraryItem, where every library item would get the feature.
 }
-// commited in class
-// ===== Remaining steps =====
 
+// ===== Step 6 Output =====
 void step6() {
   print('--- Step 6 ---');
+
+  MemberType type = MemberType.values[seed % 3];
+  int fee = mainBook().lateFee(daysLate);
+
+  print('Step 6: member type = ${type.name} (index ${type.index})');
+  print('Step 6: max loans = ${type.maxLoans}');
+  print(
+    'Step 6: book fee $fee -> '
+    '${type.applyDiscount(fee)} after discount',
+  );
+
+  // Enum values are safer than strings because Dart checks valid values.
 }
 
+// ===== Steps 7–10: Awaiting Task Instructions =====
 void step7() {
   print('--- Step 7 ---');
 }
@@ -298,4 +285,20 @@ void step9() {
 
 void step10() {
   print('--- Step 10 ---');
+}
+
+// ===== Main =====
+void main() {
+  print('Seed: $seed (t=$t, u=$u)');
+
+  step1();
+  step2();
+  step3();
+  step4();
+  step5();
+  step6();
+  step7();
+  step8();
+  step9();
+  step10();
 }
