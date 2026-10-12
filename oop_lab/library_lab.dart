@@ -29,7 +29,7 @@ final int renewLimit = 1 + t % 3;
 final int renewAttempts = 2 + u;
 final int shelfSize = 3 + u % 4;
 
-// ===== Step 1 and Step 3: Abstract parent class =====
+// ===== Step 1–3: Abstract parent class =====
 
 abstract class LibraryItem {
   final String title;
@@ -39,14 +39,22 @@ abstract class LibraryItem {
 
   String describe() => '$title ($year)';
 
-  // Abstract method: each concrete subclass must implement it.
   int lateFee(int days);
+}
+
+// ===== Step 4.1: Borrowable contract =====
+
+abstract class Borrowable {
+  bool get isAvailable;
+  void borrow();
+  void giveBack();
 }
 
 // ===== Book =====
 
-class Book extends LibraryItem {
+class Book extends LibraryItem implements Borrowable {
   final int pages;
+  bool _out = false;
 
   Book(super.title, super.year, this.pages);
 
@@ -55,6 +63,19 @@ class Book extends LibraryItem {
 
   @override
   int lateFee(int days) => days * feePerDay;
+
+  @override
+  bool get isAvailable => !_out;
+
+  @override
+  void borrow() {
+    _out = true;
+  }
+
+  @override
+  void giveBack() {
+    _out = false;
+  }
 }
 
 Book mainBook() {
@@ -85,7 +106,7 @@ Magazine mainMagazine() {
   );
 }
 
-// ===== Step 3: DVD =====
+// ===== DVD =====
 
 class Dvd extends LibraryItem {
   final int minutes;
@@ -150,8 +171,8 @@ void step2() {
   print('Step 2: ${mainBook().describe()}');
   print('Step 2: ${mainMagazine().describe()}');
 
-  // If describe is misspelled as descibe(), it will not override
-  // the parent method. @override helps the analyzer detect the typo.
+  // A misspelled descibe() does not override describe().
+  // @override helps the analyzer detect this mistake.
 }
 
 // ===== Step 3 =====
@@ -178,16 +199,45 @@ void step3() {
     '${dvd.lateFee(daysLate)}',
   );
 
-  // LibraryItem('x', 2000) is not allowed because LibraryItem
-  // is abstract. Abstract classes cannot be instantiated directly;
-  // a concrete subclass must implement all abstract methods.
+  // LibraryItem('x', 2000) cannot be instantiated directly
+  // because LibraryItem is abstract.
 }
 
-// ===== Remaining steps =====
+// ===== Step 4 =====
 
 void step4() {
   print('--- Step 4 ---');
+
+  Book book = mainBook();
+
+  print('Step 4: available? ${book.isAvailable}');
+
+  book.borrow();
+  print('Step 4: after borrow? ${book.isAvailable}');
+
+  book.giveBack();
+  print('Step 4: after return? ${book.isAvailable}');
+
+  List<LibraryItem> items = [
+    book,
+    mainMagazine(),
+    mainDvd(),
+  ];
+
+  for (LibraryItem item in items) {
+    print(
+      'Step 4: ${item.runtimeType} borrowable? '
+      '${item is Borrowable}',
+    );
+  }
+
+  // implements Borrowable requires Book to write all three
+  // member implementations itself. extends Borrowable would
+  // inherit any concrete method bodies, but Borrowable declares
+  // only a contract with no method bodies.
 }
+
+// ===== Remaining steps =====
 
 void step5() {
   print('--- Step 5 ---');
