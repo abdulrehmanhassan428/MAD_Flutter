@@ -42,7 +42,7 @@ abstract class LibraryItem {
   int lateFee(int days);
 }
 
-// ===== Step 4.1: Borrowable contract =====
+// ===== Step 4: Borrowable contract =====
 
 abstract class Borrowable {
   bool get isAvailable;
@@ -50,9 +50,24 @@ abstract class Borrowable {
   void giveBack();
 }
 
+// ===== Step 5.1: Renewable mixin =====
+
+mixin Renewable {
+  int renewals = 0;
+
+  bool renew(int limit) {
+    if (renewals >= limit) {
+      return false;
+    }
+
+    renewals++;
+    return true;
+  }
+}
+
 // ===== Book =====
 
-class Book extends LibraryItem implements Borrowable {
+class Book extends LibraryItem with Renewable implements Borrowable {
   final int pages;
   bool _out = false;
 
@@ -108,7 +123,7 @@ Magazine mainMagazine() {
 
 // ===== DVD =====
 
-class Dvd extends LibraryItem {
+class Dvd extends LibraryItem with Renewable {
   final int minutes;
 
   Dvd(super.title, super.year, this.minutes);
@@ -172,7 +187,7 @@ void step2() {
   print('Step 2: ${mainMagazine().describe()}');
 
   // A misspelled descibe() does not override describe().
-  // @override helps the analyzer detect this mistake.
+  // @override helps the analyzer detect the mistake.
 }
 
 // ===== Step 3 =====
@@ -231,17 +246,39 @@ void step4() {
     );
   }
 
-  // implements Borrowable requires Book to write all three
-  // member implementations itself. extends Borrowable would
-  // inherit any concrete method bodies, but Borrowable declares
-  // only a contract with no method bodies.
+  // implements requires Book to implement every contract member.
+  // extends Borrowable would inherit concrete implementations,
+  // but Borrowable declares no method bodies.
 }
 
-// ===== Remaining steps =====
+// ===== Step 5 =====
 
 void step5() {
   print('--- Step 5 ---');
+
+  Book book = mainBook();
+  int ok = 0;
+
+  for (int i = 0; i < renewAttempts; i++) {
+    if (book.renew(renewLimit)) {
+      ok++;
+    }
+  }
+
+  print(
+    'Step 5: renewed $ok of $renewAttempts attempts '
+    '(limit $renewLimit)',
+  );
+
+  print('Step 5: renew once more? ${book.renew(renewLimit)}');
+  print('Step 5: dvd can renew too? ${mainDvd().renew(1)}');
+
+  // Book and Dvd share renewal behaviour through a mixin.
+  // Magazine does not need renewal, so it should not inherit it
+  // from LibraryItem, where every library item would get the feature.
 }
+
+// ===== Remaining steps =====
 
 void step6() {
   print('--- Step 6 ---');
